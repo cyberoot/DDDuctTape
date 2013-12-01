@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FolderSync.Library;
-using FolderSync.Library.Common;
-using FolderSync.Library.Comparer;
+using DDDuctTape.App.Core;
 using Microsoft.Practices.Unity;
 using NUnit.Framework;
 
@@ -17,13 +15,10 @@ namespace DDDuctTape.App.Tests
         [Test]
         public void DoSync()
         {
-            var ioc = new UnityContainer()
-                .RegisterType<IFileComparer, NullSyncComparer>()
-                .RegisterType(typeof(IComponentLibrary<>), typeof(FixedComponentLibrary<>));
+            var ioc = new UnityContainer();
 
             var sync = ioc.Resolve<SyncMachine>();
-            sync.CopyMissingFilesByMask(@"f:\temp\Ы1111ПыЩПыЩ", @"f:\temp\Result", null);
-
+            sync.CopyMissingFilesNoOverWrite(@"d:\temp\Ы1111ПыЩПыЩ", @"d:\temp\Result");
         }
     }
 }

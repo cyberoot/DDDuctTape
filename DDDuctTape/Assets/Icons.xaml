@@ -1,6 +1,6 @@
 ﻿<ResourceDictionary 
-	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <BitmapImage x:Key="GreenCheckMark" UriSource="..\Assets\Media\StatusAnnotations_Complete_and_ok_16xLG_color.png" />
-    <BitmapImage x:Key="RedCrosskMark" UriSource="..\Assets\Media\StatusAnnotations_Critical_16xLG_color.png" />
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <BitmapImage x:Key="GreenCheckMark" UriSource="pack://application:,,/Assets/Media/StatusAnnotations_Complete_and_ok_16xLG_color.png" />
+    <BitmapImage x:Key="RedCrosskMark" UriSource="pack://application:,,/Assets/Media/StatusAnnotations_Critical_16xLG_color.png" />
 </ResourceDictionary>

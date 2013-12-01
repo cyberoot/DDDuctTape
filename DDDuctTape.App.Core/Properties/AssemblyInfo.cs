@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("DDDuctTape.App.Tests")]
+[assembly: AssemblyTitle("DDDuctTape.App.Core")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("DDDuctTape.App.Tests")]
+[assembly: AssemblyProduct("DDDuctTape.App")]
 [assembly: AssemblyCopyright("Copyright ©  2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("3125164b-8576-484e-ba06-2eb04e957b84")]
+[assembly: Guid("92723170-993f-4347-81bc-47fb7ebe2b54")]
 
 // Version information for an assembly consists of the following four values:
 //
