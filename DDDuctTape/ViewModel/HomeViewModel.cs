@@ -624,7 +624,9 @@ namespace DDDuctTape.ViewModel
             {
                 if (o is string)
                 {
-                    UpdatePathStatus((o as string).Replace("TextBox", ""), dialog.SelectedPath);
+                    var actionCode = (o as string).Replace("TextBox", "");
+                    UpdatePathStatus(actionCode, dialog.SelectedPath);
+                    OnPropertyChanged(actionCode);
                 }
             }
         }
@@ -669,9 +671,20 @@ namespace DDDuctTape.ViewModel
         {
             var fileMustExist = new[] { "CdAppsPath", "DdApps" }.Contains(actionCode) ? "DDWIN.EXE" : "MNUITM.DBF";
 
+            var antiCode = (actionCode == "CdAppsPath")
+                ? "DdApps"
+                : (actionCode == "DdApps") ? "CdAppsPath" : (actionCode == "InitData") ? "SiteData" : "InitData";
+
             workPaths[actionCode] = path;
 
             checkFlags[actionCode] = (short)(File.Exists(String.Format(path + @"\{0}", fileMustExist)) ? 1 : 0);
+
+            if (checkFlags[actionCode] == 1 && checkFlags[antiCode] != 1 && File.Exists(String.Format(workPaths[antiCode] + @"\{0}", fileMustExist)))
+            {
+                checkFlags[antiCode] = 1;
+                imgStatus[antiCode] = GetStatusImage("Complete_and_ok");
+                OnPropertyChanged("ImgStatus" + antiCode);
+            }
 
             imgStatus[actionCode] = GetStatusImage(checkFlags[actionCode] == 1 ? "Complete_and_ok" : "Critical");
 
@@ -681,13 +694,17 @@ namespace DDDuctTape.ViewModel
                 imgStatus["DdApps"] = GetStatusImage("Critical");
                 checkFlags["CdAppsPath"] = 0;
                 checkFlags["DdApps"] = 0;
+                OnPropertyChanged("ImgStatusCdAppsPath");
+                OnPropertyChanged("ImgStatusDdApps");
             }
-            if(workPaths["InitData"] == workPaths["SiteData"])
+            if (workPaths["InitData"] == workPaths["SiteData"])
             {
                 imgStatus["InitData"] = GetStatusImage("Critical");
                 imgStatus["SiteData"] = GetStatusImage("Critical");
                 checkFlags["InitData"] = 0;
                 checkFlags["SiteData"] = 0;
+                OnPropertyChanged("ImgStatusInitData");
+                OnPropertyChanged("ImgStatusSiteData");
             }
             OnPropertyChanged("ImgStatus" + actionCode);
 

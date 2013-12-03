@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Management.Automation;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -211,7 +210,8 @@ namespace DDDuctTape.App.Core
              * При проверке используем следующий фильтр: игнорируем текстовые файлы (*.TXT), а также файлы, начинающиеся с DDTEMP (DDTEMP*.*).
              * Если файлы по данному фильтру с 0 размером таки обнаруживаются, то пишем имена этих счастливчиков с полным путем в пункт 19 красным колером.
             */
-            var pattern = new WildcardPattern("DDTEMP*.*");
+            //var pattern = new WildcardPattern("DDTEMP*.*");
+            var pattern = new Regex(@"\DDTEMP.*\..*$");
 
             IList<string> files = await Task.Run(
                 () =>
