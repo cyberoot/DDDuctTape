@@ -669,7 +669,7 @@ namespace DDDuctTape.ViewModel
 
         private void UpdatePathStatus(string actionCode, string path)
         {
-            var fileMustExist = new[] { "CdAppsPath", "DdApps" }.Contains(actionCode) ? "DDWIN.EXE" : "MNUITM.DBF";
+            var fileMustExist = new[] { "CdAppsPath", "DdApps" }.Contains(actionCode) ? "DDWIN.EXE" : "MNUITMDT.DBF";
 
             var antiCode = (actionCode == "CdAppsPath")
                 ? "DdApps"

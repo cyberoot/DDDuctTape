@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using DDDuctTape.App.Core;
 using Microsoft.Practices.Unity;
@@ -13,12 +14,12 @@ namespace DDDuctTape.App.Tests
     public class Sync
     {
         [Test]
-        public void DoSync()
+        public async void DoSync()
         {
             var ioc = new UnityContainer();
 
             var sync = ioc.Resolve<SyncMachine>();
-            sync.CopyMissingFilesNoOverWrite(@"d:\temp\Ы1111ПыЩПыЩ", @"d:\temp\Result");
+            await sync.CopyMissingFilesNoOverWrite(@".\folder1", @".\folder2", null, new CancellationToken());
         }
     }
 }

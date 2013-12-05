@@ -13,11 +13,11 @@
                 <mui:Link DisplayName="pedals" Source="/Pages/Home.xaml" />
             </mui:LinkGroup.Links>
         </mui:LinkGroup>
-        <mui:LinkGroup DisplayName="settings" GroupName="settings">
+        <!--mui:LinkGroup DisplayName="settings" GroupName="settings">
             <mui:LinkGroup.Links>
                 <mui:Link DisplayName="software" Source="/Pages/Settings.xaml" />
             </mui:LinkGroup.Links>
-        </mui:LinkGroup>
+        </mui:LinkGroup-->
     </mui:ModernWindow.MenuLinkGroups>
     
     <!--mui:ModernWindow.TitleLinks>
