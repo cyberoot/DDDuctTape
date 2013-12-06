@@ -124,7 +124,7 @@ namespace DDDuctTape.App.Core
              */
 
             var reg = new Regex(@"\\.{2}(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])(19|20)\d\d\..*$"); // ??MMDDYYYY.*
-            
+
             int files = await Task.Run(
                 () =>
                 {
@@ -223,17 +223,17 @@ namespace DDDuctTape.App.Core
                     {
                         ct.ThrowIfCancellationRequested();
                         badFiles = (from file in Directory.EnumerateFiles(source, "*.*", SearchOption.AllDirectories)
-                                        where
-                                            Path.GetExtension(file) != ".txt" &&
-                                            !pattern.IsMatch(file) &&
-                                            (new FileInfo(file)).Length == 0
-                                        select file).ToList();
+                                    where
+                                        Path.GetExtension(file) != ".txt" &&
+                                        !pattern.IsMatch(file) &&
+                                        (new FileInfo(file)).Length == 0
+                                    select file).ToList();
                     }
                     catch (Exception e)
                     {
                         exceptions.Add(e.ToString());
                     }
-                    
+
                     if (progress != null)
                     {
                         progress.Report(new MaintenanceProgress()
@@ -260,43 +260,71 @@ namespace DDDuctTape.App.Core
 
         public async Task<int> PerformMaintenanceByMask(string source, string destination, string mask, IProgress<MaintenanceProgress> progress, CancellationToken ct)
         {
-            var originalFiles = Directory.GetFiles(source, mask, SearchOption.TopDirectoryOnly);
-            int totalFiles = originalFiles.Count();
 
-            int filesCopied = await Task.Run<int>(
+            int filesReplaced = await PerformMaintenance(source, destination,
+                src => Directory.GetFiles(src, mask, SearchOption.TopDirectoryOnly),
+                (src, dst, origFile, bads, exceptions, summaries) =>
+                {
+                    var originalFile = new FileInfo(origFile);
+                    var destFile = new FileInfo(origFile.Replace(src, dst));
+                    var needReplace = false;
+                    if (!destFile.Exists)
+                    {
+                        bads.Add(destFile.FullName);
+                        needReplace = true;
+                    }
+                    else if (destFile.IsReadOnly)
+                    {
+                        destFile.IsReadOnly = false;
+                    }
+                    originalFile.CopyTo(destFile.FullName, true);
+                    return destFile.Exists && needReplace;
+                },
+                progress, ct);
+
+            return filesReplaced;
+        }
+
+        public async Task<int> PerformMaintenance(
+            string source, string destination,
+            Func<string, string[]> filesFinder,
+            Func<string, string, string, IList<string>, IList<string>, IList<string>, bool> fileProcessor,
+            IProgress<MaintenanceProgress> progress, CancellationToken ct)
+        {
+
+            int filesProcessed = await Task.Run<int>(
                 () =>
                 {
-                    int justProcessed = 0;
-                    int reallyCopied = 0;
-                    int replaced = 0;
+                    var exceptions = new List<string>();
+                    var bads = new List<string>();
+                    var summaries = new List<string>();
+                    string[] originalFiles;
+
+                    try
+                    {
+                        originalFiles = filesFinder(source);
+                    }
+                    catch (Exception e)
+                    {
+                        exceptions.Add(e.ToString());
+                        return 0;
+                    }
+                    int totalFiles = originalFiles.Count();
+                    int justWalked = 0;
+                    int reallyProcessed = 0;
                     Array.ForEach(originalFiles, (originalFileLocation) =>
                     {
-                        FileInfo originalFile = new FileInfo(originalFileLocation);
-                        FileInfo destFile = new FileInfo(originalFileLocation.Replace(source, destination));
-                        var exceptions = new List<string>();
-                        var bads = new List<string>();
-                        bool needReplace = false;
-                        if (!destFile.Exists)
-                        {
-                            bads.Add(destFile.FullName);
-                            needReplace = true;
-                        }
-                        else if (destFile.IsReadOnly)
-                        {
-                            destFile.IsReadOnly = false;
-                        }
                         int retryCount = 0;
                         bool tryAgain = false;
+
                         do
                         {
                             ct.ThrowIfCancellationRequested();
                             try
                             {
-                                originalFile.CopyTo(destFile.FullName, true);
-                                reallyCopied++;
-                                if (needReplace)
+                                if (fileProcessor(source, destination, originalFileLocation, bads, exceptions, summaries))
                                 {
-                                    replaced++;
+                                    reallyProcessed++;
                                 }
                             }
                             catch (Exception e)
@@ -306,7 +334,10 @@ namespace DDDuctTape.App.Core
                                 if (retryCount > 12)
                                 {
                                     tryAgain = false;
-                                    exceptions.Add(destFile.FullName);
+                                    var errStr = destination != null
+                                        ? originalFileLocation.Replace(source, destination)
+                                        : originalFileLocation;
+                                    exceptions.Add(errStr);
                                 }
                                 else
                                 {
@@ -315,22 +346,23 @@ namespace DDDuctTape.App.Core
                             }
                         } while (tryAgain);
 
-                        justProcessed++;
+                        justWalked++;
                         if (progress != null)
                         {
                             progress.Report(new MaintenanceProgress()
                             {
-                                Progress = justProcessed * 100 / totalFiles,
+                                Progress = justWalked * 100 / totalFiles,
                                 Errors = exceptions,
                                 Bads = bads,
+                                Summaries = summaries,
                                 QueueLength = totalFiles,
-                                QueueComplete = justProcessed
+                                QueueComplete = justWalked
                             });
                         }
                     });
-                    return replaced;
+                    return reallyProcessed;
                 }, ct);
-            return filesCopied;
+            return filesProcessed;
         }
 
         public async Task<int> Maintenance10(string source, IProgress<MaintenanceProgress> progress, CancellationToken ct)
@@ -338,65 +370,22 @@ namespace DDDuctTape.App.Core
             /*
              10.	Педаль 10 – удаляем все файлы, начинающиеся с DDTEMP, из корневого каталога SITEDATA (маска “DDTEMP*.*”);
              */
-            string[] originalFiles = Directory.GetFiles(source, "DDTEMP*.*", SearchOption.TopDirectoryOnly);
-            int totalFiles = originalFiles.Count();
 
-            int filesDeleted = await Task.Run<int>(
-                () =>
+            int filesDeleted = await PerformMaintenance(source, null,
+                (s) => Directory.GetFiles(source, "DDTEMP*.*", SearchOption.TopDirectoryOnly),
+                (src, dest, origFile, bads, exceptions, summaries) =>
                 {
-                    int justProcessed = 0;
-                    int reallyDeleted = 0;
-                    Array.ForEach(originalFiles, (originalFileLocation) =>
+                    var originalFile = new FileInfo(origFile);
+                    if (originalFile.IsReadOnly)
                     {
-                        FileInfo originalFile = new FileInfo(originalFileLocation);
-                        var exceptions = new List<string>();
-                        var bads = new List<string>();
-                        if(originalFile.IsReadOnly)
-                        {
-                            originalFile.IsReadOnly = false;
-                        }
-                        int retryCount = 0;
-                        bool tryAgain = false;
-                        do
-                        {
-                            ct.ThrowIfCancellationRequested();
-                            try
-                            {
-                                File.Delete(originalFileLocation);
-                                bads.Add(originalFileLocation);
-                                reallyDeleted++;
-                            }
-                            catch (Exception e)
-                            {
-                                tryAgain = true;
-                                retryCount++;
-                                if (retryCount > 12)
-                                {
-                                    tryAgain = false;
-                                    exceptions.Add(originalFile.FullName);
-                                }
-                                else
-                                {
-                                    Thread.Sleep(250);
-                                }
-                            }
-                        } while (tryAgain);
+                        originalFile.IsReadOnly = false;
+                    }
+                    File.Delete(origFile);
+                    bads.Add(origFile);
+                    return true;
+                },
+                progress, ct);
 
-                        justProcessed++;
-                        if (progress != null)
-                        {
-                            progress.Report(new MaintenanceProgress()
-                            {
-                                Progress = justProcessed * 100 / totalFiles,
-                                Errors = exceptions,
-                                Bads = bads,
-                                QueueLength = totalFiles,
-                                QueueComplete = justProcessed
-                            });
-                        }
-                    });
-                    return reallyDeleted;
-                }, ct);
             return filesDeleted;
         }
 

@@ -11,7 +11,7 @@ namespace DDDuctTape.App.Core
         public int Progress { get; set; }
         public IList<string> Errors { get; set; }
         public IList<string> Bads { get; set; }
-        public IList<string> Messages { get; set; }
+        public IList<string> Summaries { get; set; }
         public int QueueLength { get; set; }
         public int QueueComplete { get; set; }
     }
