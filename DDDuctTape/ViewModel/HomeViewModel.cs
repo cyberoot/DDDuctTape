@@ -379,6 +379,8 @@ namespace DDDuctTape.ViewModel
             errorToken = "Errors processing files:\n";
             try
             {
+                redFiles = new Dictionary<string, bool>();
+                errorsData = new Dictionary<string, bool>();
                 var filesCopied = await Sync.CopyMissingFilesNoOverWrite(InitData, SiteData, progressReporter, cancellationToken.Token);
                 StatusText = "Complete";
                 ControlButtonsEnabled = true;
@@ -400,10 +402,13 @@ namespace DDDuctTape.ViewModel
             var progressReporter = new Progress<MaintenanceProgress>(UpdateStats);
             cancellationToken = new CancellationTokenSource();
             StatusText = "Copying *.CDX files from INITDATA to SITEDATA";
-            missingToken = "[color=Red][b]Missing:[/b][/color]\n";
+            missingToken = "[color=Red][b]Missing (copied):[/b][/color]\n";
             errorToken = "Errors processing files:\n";
+            redFiles = new Dictionary<string, bool>();
             try
             {
+                redFiles = new Dictionary<string, bool>();
+                errorsData = new Dictionary<string, bool>();
                 var filesReplaced = await Sync.Maintenance9(InitData, SiteData, progressReporter, cancellationToken.Token);
                 StatusText = "Complete";
                 ControlButtonsEnabled = true;
@@ -429,6 +434,8 @@ namespace DDDuctTape.ViewModel
             errorToken = "Errors processing files:\n";
             try
             {
+                redFiles = new Dictionary<string, bool>();
+                errorsData = new Dictionary<string, bool>();
                 var filesDeleted = await Sync.Maintenance10(SiteData, progressReporter, cancellationToken.Token);
                 StatusText = "Complete";
                 ControlButtonsEnabled = true;
@@ -450,10 +457,12 @@ namespace DDDuctTape.ViewModel
             var progressReporter = new Progress<MaintenanceProgress>(UpdateStats);
             cancellationToken = new CancellationTokenSource();
             StatusText = "Copying *WK.* files from INITDATA to SITEDATA";
-            missingToken = "[color=Red][b]Missing:[/b][/color]\n";
+            missingToken = "[color=Red][b]Missing (copied):[/b][/color]\n";
             errorToken = "Errors processing files:\n";
             try
             {
+                redFiles = new Dictionary<string, bool>();
+                errorsData = new Dictionary<string, bool>();
                 var filesReplaced = await Sync.Maintenance11(InitData, SiteData, progressReporter, cancellationToken.Token);
                 StatusText = "Complete";
                 ControlButtonsEnabled = true;
@@ -479,6 +488,8 @@ namespace DDDuctTape.ViewModel
             errorToken = "Errors processing files:\n";
             try
             {
+                redFiles = new Dictionary<string, bool>();
+                errorsData = new Dictionary<string, bool>();
                 var filesReplaced = await Sync.Maintenance12(InitData, SiteData, progressReporter, cancellationToken.Token);
                 StatusText = "Complete";
                 ControlButtonsEnabled = true;
@@ -504,6 +515,8 @@ namespace DDDuctTape.ViewModel
             errorToken = "Errors processing files:\n";
             try
             {
+                redFiles = new Dictionary<string, bool>();
+                errorsData = new Dictionary<string, bool>();
                 var filesCopied = await Sync.Maintenance13(InitData, SiteData, progressReporter, cancellationToken.Token);
                 StatusText = "Complete";
                 ControlButtonsEnabled = true;
@@ -529,6 +542,8 @@ namespace DDDuctTape.ViewModel
             errorToken = "Errors processing files:\n";
             try
             {
+                redFiles = new Dictionary<string, bool>();
+                errorsData = new Dictionary<string, bool>();
                 var filesFound = await Sync.Maintenance13b(SiteData, progressReporter, cancellationToken.Token);
                 StatusText = "Complete";
                 ControlButtonsEnabled = true;
@@ -579,22 +594,29 @@ namespace DDDuctTape.ViewModel
         private string missingToken = "[color=Red][b]Missing:[/b][/color]\n";
         private string errorToken = "Errors processing files:\n";
 
+        private Dictionary<string, bool> redFiles = new Dictionary<string, bool>();
+
+        private Dictionary<string, bool> errorsData = new Dictionary<string, bool>();
+
         private void UpdateStats(MaintenanceProgress progress)
         {
-            ResultsText = "";
+            //ResultsText = "";
             CurrentOperationProgress = progress.Progress;
-            if (progress.Bads.Count > 0)
+            if (progress.Bads.Count > 0 && progress.Bads.Count != redFiles.Count)
             {
-                foreach (var bad in progress.Bads)
+                var badsList = progress.Bads.ToList();
+                foreach (var bad in badsList.Where(bad => !redFiles.ContainsKey(bad)))
                 {
+                    redFiles.Add(bad, true);
                     SummaryText += String.Format("{0}[color=Red]{1}[/color]\n", missingToken, bad);
                     missingToken = "";
                 }
             }
-            if (progress.Errors.Count > 0)
+            if (progress.Errors.Count > 0 && progress.Errors.Count != errorsData.Count)
             {
-                foreach (var error in progress.Errors)
+                foreach (var error in progress.Errors.ToList().Where(error => !errorsData.ContainsKey(error)))
                 {
+                    errorsData.Add(error, true);
                     ResultsText += String.Format("{0}{1}\n", errorToken, error);
                     errorToken = "";
                 }

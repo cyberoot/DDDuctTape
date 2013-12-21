@@ -7,7 +7,7 @@
              xmlns:s="clr-namespace:System;assembly=mscorlib"
              xmlns:vm="clr-namespace:DDDuctTape.ViewModel"
              mc:Ignorable="d" 
-             Width="960" Height="800"
+             Width="Auto" Height="Auto"
              d:DesignHeight="800" d:DesignWidth="960">
     <UserControl.DataContext>
         <vm:HomeViewModel/>
@@ -151,8 +151,8 @@
             </Grid.RowDefinitions>
 
             <mui:BBCodeBlock Grid.Row="0" BBCode="[b]Results[/b]" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="8"/>
-            <ScrollViewer Grid.Row="1" CanContentScroll="False">
-                <TextBox Margin="8,0,0,0" Text="{Binding ResultsText}"/>
+            <ScrollViewer Grid.Row="1" CanContentScroll="False" Name="ResultsScrollViewer">
+                <TextBox Margin="8,0,0,0" Text="{Binding ResultsText}" TextChanged="TextBoxBase_OnTextChanged"/>
             </ScrollViewer>
 
             <mui:BBCodeBlock Grid.Row="2" BBCode="[b]Summary[/b]" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="8"/>

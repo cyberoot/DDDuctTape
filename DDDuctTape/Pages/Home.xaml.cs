@@ -24,5 +24,10 @@ namespace DDDuctTape.Pages
         {
             InitializeComponent();
         }
+
+        private void TextBoxBase_OnTextChanged(object sender, TextChangedEventArgs e)
+        {
+            ResultsScrollViewer.ScrollToBottom();
+        }
     }
 }

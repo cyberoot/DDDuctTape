@@ -211,7 +211,7 @@ namespace DDDuctTape.App.Core
              * Если файлы по данному фильтру с 0 размером таки обнаруживаются, то пишем имена этих счастливчиков с полным путем в пункт 19 красным колером.
             */
             //var pattern = new WildcardPattern("DDTEMP*.*");
-            var pattern = new Regex(@"\DDTEMP.*\..*$");
+            var pattern = new Regex(@"\DDTEMP.*\..*$", RegexOptions.IgnoreCase);
 
             IList<string> files = await Task.Run(
                 () =>
@@ -224,7 +224,7 @@ namespace DDDuctTape.App.Core
                         ct.ThrowIfCancellationRequested();
                         badFiles = (from file in Directory.EnumerateFiles(source, "*.*", SearchOption.AllDirectories)
                                     where
-                                        Path.GetExtension(file) != ".txt" &&
+                                        Path.GetExtension(file) != ".txt" && Path.GetExtension(file) != ".TXT" &&
                                         !pattern.IsMatch(file) &&
                                         (new FileInfo(file)).Length == 0
                                     select file).ToList();
@@ -260,18 +260,17 @@ namespace DDDuctTape.App.Core
 
         public async Task<int> PerformMaintenanceByMask(string source, string destination, string mask, IProgress<MaintenanceProgress> progress, CancellationToken ct)
         {
-
             int filesReplaced = await PerformMaintenance(source, destination,
                 src => Directory.GetFiles(src, mask, SearchOption.TopDirectoryOnly),
                 (src, dst, origFile, bads, exceptions, summaries) =>
                 {
                     var originalFile = new FileInfo(origFile);
                     var destFile = new FileInfo(origFile.Replace(src, dst));
-                    var needReplace = false;
+                    var needReplace = true;
                     if (!destFile.Exists)
                     {
                         bads.Add(destFile.FullName);
-                        needReplace = true;
+                        needReplace = false;
                     }
                     else if (destFile.IsReadOnly)
                     {
@@ -337,7 +336,7 @@ namespace DDDuctTape.App.Core
                                     var errStr = destination != null
                                         ? originalFileLocation.Replace(source, destination)
                                         : originalFileLocation;
-                                    exceptions.Add(errStr);
+                                    exceptions.Add(e.Message + Environment.NewLine + errStr);
                                 }
                                 else
                                 {
